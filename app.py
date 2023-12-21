@@ -10,9 +10,6 @@ import time
 from gtts import gTTS
 from io import BytesIO
 
-import os
-
-os.environ['OPEN_API_KEY'] = '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'
 
 # Define the language learning settings
 LANGUAGES = ['English', 'German', 'Spanish', 'French', 'Vietnam']

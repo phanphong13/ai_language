@@ -19,7 +19,7 @@ from langchain.memory import ConversationBufferMemory
 
 # import os
 
-os.environ['OPEN_API_KEY'] = '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'
+os.environ['OPEN_API_KEY'] = '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'
 
 
 class Chatbot:
@@ -42,7 +42,7 @@ class Chatbot:
             # Reminder: need to set up openAI API key 
             # (e.g., via environment variable OPENAI_API_KEY)
             self.llm = ChatOpenAI(
-                openai_api_key = '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',
+                openai_api_key = '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',
                 model_name="gpt-3.5-turbo",
                 temperature=0.7
             )
@@ -322,7 +322,7 @@ class DualChatbot:
             # Reminder: need to set up openAI API key 
             # (e.g., via environment variable OPENAI_API_KEY)
             self.translator = ChatOpenAI(
-                openai_api_key = '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',
+                openai_api_key = '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',
                 model_name="gpt-3.5-turbo",
                 temperature=0.7
             )
@@ -369,7 +369,7 @@ class DualChatbot:
             # Reminder: need to set up openAI API key 
             # (e.g., via environment variable OPENAI_API_KEY)
             self.summary_bot = ChatOpenAI(
-                openai_api_key = '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',
+                openai_api_key = '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',
                 model_name="gpt-3.5-turbo",
                 temperature=0.7
             )
