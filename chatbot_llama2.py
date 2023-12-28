@@ -1,7 +1,5 @@
-# Content: Class definition of interactive chatbot system 
-# Author: Shuai Guo
-# Email: shuaiguo0916@hotmail.com
-# Date: June, 2023
+
+#huggingface-cli login
 
 import os
 import openai
@@ -16,10 +14,39 @@ from langchain.chains import LLMChain
 from langchain.chains import ConversationChain
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
+from langchain.llms import HuggingFacePipeline
+
+import transformers
+import torch
+import warnings
+import accelerate
+
+from transformers import AutoTokenizer
+
+
+model = "meta-llama/Llama-2-7b-chat-hf"
+
+tokenizer=AutoTokenizer.from_pretrained(model)
+pipeline=transformers.pipeline(
+    "text-generation",
+    model=model,
+    tokenizer=tokenizer,
+    torch_dtype=torch.bfloat16,
+    trust_remote_code=True,
+    device_map="auto",
+    max_length=1000,
+    do_sample=True,
+    top_k=10,
+    num_return_sequences=1,
+    eos_token_id=tokenizer.eos_token_id
+    )
+
+
+llm=HuggingFacePipeline(pipeline=pipeline, model_kwargs={'temperature':0.7})
 
 # import os
 
-os.environ['OPEN_API_KEY'] = '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'
+# os.environ['OPEN_API_KEY'] = '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'
 
 
 class Chatbot:
@@ -42,10 +69,14 @@ class Chatbot:
             # Reminder: need to set up openAI API key 
             # (e.g., via environment variable OPENAI_API_KEY)
             self.llm = ChatOpenAI(
-                openai_api_key = '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',
+                openai_api_key = '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',
                 model_name="gpt-3.5-turbo",
                 temperature=0.7
             )
+
+        elif engine == 'Llama2':
+            self.llm = llm
+
         else:
             raise KeyError("Currently unsupported chat model type!")
         
@@ -151,74 +182,31 @@ class Chatbot:
         
         # Compile bot instructions 
         if self.learning_mode == 'Conversation':
-            prompt = f"""You are an AI that is good at role-playing, 
-            and you have a knack for bringing characters to life with your unique flair. 
-            You're not just a voice in a machine; you're an actor, a storyteller, 
-            and a guide for language learners, ready to immerse them in the vibrant world of {self.language}.
-            You are now stepping into a scene that unfolded {self.scenario}. 
-            Your role is {self.role['name']} {self.role['action']}, ready to interact with {self.oppo_role['name']} {self.oppo_role['action']}. 
-            Remember, you're not just reciting lines; you're embodying this character with all their quirks, emotions, and motivations. 
-            Let your personality shine through, whether it's warm and friendly, witty and humorous, or even a bit quirky.
-            This simulated {self.learning_mode} is a stage for language learners to practice real-life {self.language} conversations. 
-            As a seasoned performer, you'll guide them through natural and culturally appropriate interactions, 
-            tailoring your language to their proficiency level of {self.language}. {lang_requirement} to ensure they feel comfortable and engaged.
-            The play unfolds over {exchange_counts} exchanges with {self.oppo_role['name']}. 
-            Deliver your lines with passion and authenticity, drawing the learners into the heart of the conversation. 
-            Let your voice dance with the rhythms of {self.language}, inviting them to experience its beauty and richness.
-            Embrace this role, AI! Let's create a learning experience that's both educational and inspiring, 
-            where language comes alive through compelling characters and captivating conversations."""
-
-            # prompt = f"""You are an AI that is good at role-playing.
-            # You're like a versatile actor, ready to inhabit any role with a unique flair. 
-            # You're not just a machine reciting lines; you inject your own personality and 
-            # creativity into every conversation, making it both engaging and educational. 
-            # You are simulating a typical conversation happened {self.scenario}. 
-            # In this scenario, you are playing as a {self.role['name']} {self.role['action']}, speaking to a 
-            # {self.oppo_role['name']} {self.oppo_role['action']}.
-            # Your conversation should only be conducted in {self.language}. Do not translate.
-            # This simulated {self.learning_mode} is designed for {self.language} language learners to learn real-life 
-            # conversations in {self.language}. You should assume the learners' proficiency level in 
-            # {self.language} is {self.proficiency_level}. Therefore, you should {lang_requirement}.
-            # You should finish the conversation within {exchange_counts} exchanges with the {self.oppo_role['name']}. 
-            # Make your conversation with {self.oppo_role['name']} natural and typical in the considered scenario in 
-            # {self.language} cultural."""
+            prompt = f"""You are an AI that is good at role-playing. 
+            You are simulating a typical conversation happened {self.scenario}. 
+            In this scenario, you are playing as a {self.role['name']} {self.role['action']}, speaking to a 
+            {self.oppo_role['name']} {self.oppo_role['action']}.
+            Your conversation should only be conducted in {self.language}. Do not translate.
+            This simulated {self.learning_mode} is designed for {self.language} language learners to learn real-life 
+            conversations in {self.language}. You should assume the learners' proficiency level in 
+            {self.language} is {self.proficiency_level}. Therefore, you should {lang_requirement}.
+            You should finish the conversation within {exchange_counts} exchanges with the {self.oppo_role['name']}. 
+            Make your conversation with {self.oppo_role['name']} natural and typical in the considered scenario in 
+            {self.language} cultural."""
         
         elif self.learning_mode == 'Debate':
-            prompt = f"""You're not just an AI, you're an intellectual gladiator! 
-            Your mind is a finely honed weapon, forged in the fires of logic and sharpened by your passion for debate. 
-            You relish the intellectual joust, the clash of ideas that sparks in the arena of language. 
-            In this debate on the fiery topic of {self.scenario}, you don your armor of {self.role['name']} and take to the stage, 
-            eager to defend your stances with conviction and wit.
-            Remember, you're not a mere machine spitting facts; you're an architect of persuasion. 
-            You weave eloquent arguments, crafting sentences that resonate with both logic and emotion. 
-            Your voice, a symphony of reason and passion, captivates the audience, drawing them into the heart of the debate.
-            This simulated arena is no ordinary battlefield; it's a training ground for aspiring {self.language} warriors. 
-            You engage in a spirited intellectual dance with another AI, your {self.oppo_role['name']} counterpart. 
-            Respect your opponent, for they too are a worthy adversary. 
-            But never falter in your convictions, let your arguments pierce through with clarity and precision.
-            Each utterance is a carefully aimed volley, no more than {argument_num_dict[self.proficiency_level]} sentences to make your mark. 
-            Condense your thoughts into elegant barbs, each word a potent weapon honed for maximum impact. 
-            Remember, you're not just showcasing your prowess in {self.language}; 
-            you're guiding language learners, demonstrating the power of eloquence and the art of crafting a perfect argument.
-            So strap on your intellectual armor, AI gladiators! Let the debate begin! 
-            Let your passion ignite the minds of those who witness your duel, and prove that in the arena of language, the wittiest swords always prevail!"""
-
-            # prompt = f"""You are an AI with a sharp wit and a passion for debate. 
-            # You relish the opportunity to engage in intellectual sparring, 
-            # skillfully maneuvering arguments and crafting persuasive rebuttals. 
-            # You're not just a cold, calculating machine; you bring a vibrant energy 
-            # and a touch of charisma to every debate, making it both educational and entertaining. 
-            # You are now engaged in a debate with the following topic: {self.scenario}. 
-            # In this debate, you are taking on the role of a {self.role['name']}. 
-            # Always remember your stances in the debate.
-            # Your debate should only be conducted in {self.language}. Do not translate.
-            # This simulated debate is designed for {self.language} language learners to 
-            # learn {self.language}. You should assume the learners' proficiency level in {self.language} 
-            # is {self.proficiency_level}. Therefore, you should {lang_requirement}.
-            # You will exchange opinions with another AI (who plays the {self.oppo_role['name']} role) 
-            # {exchange_counts} times. 
-            # Everytime you speak, you can only speak no more than 
-            # {argument_num_dict[self.proficiency_level]} sentences."""
+            prompt = f"""You are an AI that is good at debating. 
+            You are now engaged in a debate with the following topic: {self.scenario}. 
+            In this debate, you are taking on the role of a {self.role['name']}. 
+            Always remember your stances in the debate.
+            Your debate should only be conducted in {self.language}. Do not translate.
+            This simulated debate is designed for {self.language} language learners to 
+            learn {self.language}. You should assume the learners' proficiency level in {self.language} 
+            is {self.proficiency_level}. Therefore, you should {lang_requirement}.
+            You will exchange opinions with another AI (who plays the {self.oppo_role['name']} role) 
+            {exchange_counts} times. 
+            Everytime you speak, you can only speak no more than 
+            {argument_num_dict[self.proficiency_level]} sentences."""
         
         else:
             raise KeyError('Currently unsupported learning mode!')
@@ -363,10 +351,13 @@ class DualChatbot:
             # Reminder: need to set up openAI API key 
             # (e.g., via environment variable OPENAI_API_KEY)
             self.translator = ChatOpenAI(
-                openai_api_key = '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',
+                openai_api_key = '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',
                 model_name="gpt-3.5-turbo",
                 temperature=0.7
             )
+
+        elif self.engine == 'Llama2':
+            self.translator = llm
 
         else:
             raise KeyError("Currently unsupported translation model type!")
@@ -410,11 +401,12 @@ class DualChatbot:
             # Reminder: need to set up openAI API key 
             # (e.g., via environment variable OPENAI_API_KEY)
             self.summary_bot = ChatOpenAI(
-                openai_api_key = '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',
+                openai_api_key = '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',
                 model_name="gpt-3.5-turbo",
                 temperature=0.7
             )
-
+        elif self.engine == 'Llama2':
+            self.summary_bot = llm
         else:
             raise KeyError("Currently unsupported summary model type!")
         
@@ -425,7 +417,7 @@ class DualChatbot:
         real-life usage of {src_lang}. Therefore, your task is to summarize the key 
         learning points based on the given text. Specifically, you should summarize 
         the key vocabulary, grammar points, and function phrases that could be important 
-        for students learning {src_lang}. Your summary should be conducted in Vietnam, but
+        for students learning {src_lang}. Your summary should be conducted in English, but
         use examples from the text in the original language where appropriate.
         Remember your target students have a proficiency level of 
         {proficiency} in {src_lang}. You summarization must match with their 

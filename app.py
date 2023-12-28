@@ -1,15 +1,9 @@
-# Content: Streamlit app for language learning
-# Author: Shuai Guo
-# Email: shuaiguo0916@hotmail.com
-# Date: June, 2023
-
 import streamlit as st
 from streamlit_chat import message
 from chatbot import DualChatbot
 import time
 from gtts import gTTS
 from io import BytesIO
-
 
 # Define the language learning settings
 LANGUAGES = ['English', 'German', 'Spanish', 'French', 'Vietnam']
@@ -196,7 +190,7 @@ if 'dual_chatbots' not in st.session_state:
 if 'dual_chatbots' in st.session_state:  
 
     # Show translation 
-    if translate_col.button('Translate:'):
+    if translate_col.button('Translate to English'):
         st.session_state['translate_flag'] = True
         st.session_state['batch_flag'] = True
 
